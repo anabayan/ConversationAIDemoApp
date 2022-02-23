@@ -120,6 +120,7 @@
                 <Button Text="HELP"  BackgroundColor="#3A4235" TextColor="#FFFFFF" Margin="4" Command="{Binding HelpCommand}"></Button>
                 <Button Text="YES" BackgroundColor="#3A4235" TextColor="#FFFFFF" Margin="4" Command="{Binding YesCommand}"></Button>
                 <Button Text="NO" BackgroundColor="#3A4235" TextColor="#FFFFFF" Margin="4" Command="{Binding NoCommand}"></Button>
+                <Button Text="MENU"  BackgroundColor="#3A4235" TextColor="#FFFFFF" Margin="4" Command="{Binding MenuCommand}"></Button>
                 <!--<StackLayout Orientation="Vertical" IsVisible="{Binding AreOptionsVisible}">
                 </StackLayout>-->
             </StackLayout>

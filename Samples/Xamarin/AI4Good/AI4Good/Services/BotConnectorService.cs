@@ -31,6 +31,7 @@ namespace AI4Good.Services
             _userName = userName;
 
             _client = new DirectLineClient(DirectLineSecret);
+            _client.HttpClient.Timeout = TimeSpan.FromSeconds(120);
             _conversation = await _client.Conversations.StartConversationAsync();
             await Task.Delay(200);
             new System.Threading.Thread(async () =>

@@ -277,6 +277,7 @@ namespace AI4Good.ViewModels
         #endregion
 
         #region Commands
+        public Command MenuCommand { get; set; }
         public Command MuteCommand { get; set; }
         public Command YesCommand { get; set; }
         public Command NoCommand { get; set; }
@@ -289,6 +290,7 @@ namespace AI4Good.ViewModels
 
         private void InitializeCommands()
         {
+            MenuCommand = new Command(() => ExecuteMenuCommand());
             MuteCommand = new Command(() => ExecuteMuteCommand());
             YesCommand = new Command(async () => await ExecuteYesCommand());
             NoCommand = new Command(async () => await ExecuteNoCommand());
@@ -314,6 +316,10 @@ namespace AI4Good.ViewModels
             await _bot.SendMessage(message);
         }
 
+        private async Task ExecuteMenuCommand()
+        {
+            await HandleBotMessageAsync("Workflow", false);
+        }
         private async Task ExecuteYesCommand()
         {
             await HandleBotMessageAsync("Yes", false);
