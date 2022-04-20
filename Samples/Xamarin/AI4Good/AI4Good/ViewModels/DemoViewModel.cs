@@ -12,12 +12,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xamarin.Forms;
+using Plugin.AudioRecorder;
 
 namespace AI4Good.ViewModels
 {
     public class DemoViewModel:BaseViewModel
     {
         #region properties
+
         WebAPIService webAPIService;
         public ObservableCollection<Conversation> Conversations { get; set; }
         public ObservableCollection<UserRole> UserRoles { get; set; }
@@ -169,11 +171,20 @@ namespace AI4Good.ViewModels
             hubConnector = new HubConnector(UserName);
             await hubConnector.StartAsync();
             hubConnector.TTSResponseDelegate += HubConnector_TTSResponseDelegate;
-            //hubConnector.SpeechConversionDelegate += HubConnector_SpeechConversionDelegate;
+            //hubConnector.SpeechToTextDelegate += HubConnector_SpeechToTextDelegate;
             IsSendVisible = true;
             await Task.Delay(500);
             _bot = new BotConnectorService(hubConnector);
+            _bot.UIAction += _bot_UIAction;
             await _bot.StartBotConversation(UserName);
+        }
+
+        private void _bot_UIAction(string str, string str2, string str3)
+        {
+            if(str.ToUpper()== "Please select an item to pick".ToUpper())
+            {
+                GetItemsToPick("PICK");
+            }
         }
 
         private async void HubConnector_TTSResponseDelegate(string user, string message, string originalMessage)
@@ -188,12 +199,17 @@ namespace AI4Good.ViewModels
                 lastTTS = message;
                 lastAIText = originalMessage;
                 await Task.Delay(100);
+                MuteText = "MUTE";
                 Audio.PlayBase64(message);
 
                 if (originalMessage.Contains("Pick, Pack"))
                     AreOptionsVisible = true;
-
-                Conversations.Add(new Conversation { IsAI = true, Message = originalMessage });
+                else if(originalMessage=="base64speech")
+                {
+                    await HandleBotMessageAsync(message, false);
+                }
+                else
+                    Conversations.Add(new Conversation { IsAI = true, Message = originalMessage });
             }
         }
         #endregion
@@ -225,6 +241,7 @@ namespace AI4Good.ViewModels
                 //TotalAudioTimeout = TimeSpan.FromSeconds(15) //audio will stop recording after 15 seconds
             };
             recorder.AudioInputReceived += Recorder_AudioInputReceived;
+            //recorder.StartRecording();
         }
 
         private void Audio_StateChanged(object sender, EventArgs e)
@@ -233,16 +250,27 @@ namespace AI4Good.ViewModels
             {
                 recorder.StartRecording();
             }
+            if(!Audio.IsPlaying)
+            {
+                MuteText = "MUTE";
+                recorder.StartRecording();
+            }
         }
 
-        private void Recorder_AudioInputReceived(object sender, string e)
+        private async void Recorder_AudioInputReceived(object sender, string e)
         {
             if (sender.GetType() == typeof(AudioRecorderService))
             {
                 //MicrophoneImage = "mic_off.png";
                 var arService = (AudioRecorderService)sender;
-                //var filePath = arService.FilePath;
-                //SendAudioForTranslation(filePath);
+                var filePath = arService.FilePath;
+                SendAudioForTranslation(filePath);
+            }
+            if (!recorder.IsRecording)
+            {
+                await Task.Delay(1000);
+                recorder.StartRecording();
+
             }
         }
 
@@ -251,19 +279,8 @@ namespace AI4Good.ViewModels
             using (FileStream stream = new FileStream(filePath, FileMode.Open))
             {
                 var fileByteArray = ReadBytesFromStream(stream);
-                //var base64message = Convert.ToBase64String(fileByteArray);
-                //var selectedLanguage = this.SelectedLanguage;
-                //hubConnector.GetTextFromSpeech(UserName, base64message);
-                //if (speechResult != null)
-                //{
-                //    if (speechResult.DisplayText == null)
-                //        return;
-
-                //    if (speechResult.DisplayText.Length <= 30)
-                //        GetBotIntent(speechResult.DisplayText);
-                //    else
-                //        MetalDetectorDemo(speechResult.DisplayText);
-                //}
+                var base64message = Convert.ToBase64String(fileByteArray);
+                hubConnector.GetSpeech2TextMethodName(UserName, base64message,"Pick");
             }
         }
         public byte[] ReadBytesFromStream(Stream input)

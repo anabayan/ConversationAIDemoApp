@@ -14,12 +14,14 @@ namespace AI4Good.Services
         private DirectLineClient _client;
         private Conversation _conversation;
         private readonly HubConnector _hubConnector;
+        public event MsgDelegate UIAction;
         private string _userName;
-
+        private string _channelId;
 
         public BotConnectorService(HubConnector hubConnector)
         {
             _hubConnector = hubConnector;
+            _channelId = Guid.NewGuid().ToString();
         }
 
         public async Task StartBotConversation(string userName)
@@ -50,7 +52,7 @@ namespace AI4Good.Services
             {
                 Activity userMessage = new Activity()
                 {
-                    From = new ChannelAccount(_userName),
+                    From = new ChannelAccount(_channelId, _userName),
                     Text = input,
                     Type = ActivityTypes.Message
                 };
@@ -90,6 +92,7 @@ namespace AI4Good.Services
                         }
 
                         _hubConnector.GetText2Speech(_userName, activityText);
+                        this.UIAction.Invoke(activity.Text, activity.Action, string.Empty);
                     }
                 }
 

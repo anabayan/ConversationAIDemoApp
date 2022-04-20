@@ -12,9 +12,9 @@ namespace AI4Good.Services
     {
         private HubConnection _hubConnection;
         private readonly string _DEFAULT_ConversationalHubUrl = "https://ai4good-singalr-hub.azurewebsites.net/conversationalhub";
-        //private readonly string _DEFAULT_ConversationalHubUrl = "https://localhost:5001/conversationalhub";
         private readonly string _DEFAULT_SendMessageMethodName = "SendMessage";
         private readonly string _DEFAULT_GetText2SpeechMethodName = "GetSpeechFromText";
+        private readonly string _DEFAULT_GetSpeech2TextMethodName = "GetTextFromSpeech";
         private readonly string _DEFAULT_Text2SpeechResponseMethodName = "ReceiveBroadcast";
         public event MsgDelegate TTSResponseDelegate;
         private readonly string _userName;
@@ -26,7 +26,6 @@ namespace AI4Good.Services
 
         private void InitializeHub()
         {
-            //this.TTSResponseDelegate += HubConnector_TTSResponseDelegate;
             HubConnectionBuilder builder = new HubConnectionBuilder();
             _hubConnection = builder.WithUrl(_DEFAULT_ConversationalHubUrl).WithAutomaticReconnect().Build();
             _hubConnection.Closed += HubConnection_Closed;
@@ -34,6 +33,7 @@ namespace AI4Good.Services
             _hubConnection.Reconnecting += HubConnection_Reconnecting;
             _hubConnection.On<string, string, DateTime>("Log", LogReceived);
             _hubConnection.On<string, string, string>(_DEFAULT_Text2SpeechResponseMethodName, TTSResponseReceived);
+            //_hubConnection.On<string, string, string>(_DEFAULT_Text2SpeechResponseMethodName, SpeechToTextReceived);
         }
 
         private Task HubConnection_Reconnected(string arg)
@@ -45,13 +45,11 @@ namespace AI4Good.Services
         {
             throw new NotImplementedException();
         }
-        private void HubConnector_TTSResponseDelegate(string str, string str2)
-        {
-        }
         private void TTSResponseReceived(string user, string message, string originalMessage)
         {
             this.TTSResponseDelegate.Invoke(user, message, originalMessage);
         }
+    
 
         private void LogReceived(string user, string message, DateTime utcTime)
         {
@@ -85,6 +83,10 @@ namespace AI4Good.Services
         public void GetText2Speech(string UserName, string Message, CancellationToken cancellationToken = default)
         {
             _hubConnection.SendAsync(_DEFAULT_GetText2SpeechMethodName, UserName, Message);
+        }
+        public void GetSpeech2TextMethodName(string UserName, string base64message, string intent, CancellationToken cancellationToken = default)
+        {
+            _hubConnection.SendAsync(_DEFAULT_GetSpeech2TextMethodName, UserName, base64message, intent);
         }
     }
 }
