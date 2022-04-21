@@ -7,6 +7,7 @@ using Microsoft.Bot.Connector.DirectLine;
 namespace AI4Good.Services
 {
     public delegate void ConversationDelegate(string message);
+    public delegate void UIActionDelegate(string message, IList<CardAction> actions);
     public class BotConnectorService : IDisposable
 	{
         private const string DirectLineSecret = "fMn-tvTSLls.sQcZKJZgyZnR35E7RwNTcDQ4qMmI8Ce8zWanlmhF30Q";
@@ -14,7 +15,7 @@ namespace AI4Good.Services
         private DirectLineClient _client;
         private Conversation _conversation;
         private readonly HubConnector _hubConnector;
-        public event MsgDelegate UIAction;
+        public event UIActionDelegate UIAction;
         private string _userName;
         private string _channelId;
 
@@ -85,14 +86,19 @@ namespace AI4Good.Services
                         {
                             foreach (var action in activity.SuggestedActions.Actions)
                                 actions.Add(action.Value.ToString());
+
+                            this.UIAction.Invoke(activity.Text, activity.SuggestedActions.Actions);
                         }
-                        if (actions.Count > 0)
+                        if (actions.Count > 0 && actions.Any(item => item == "Pick"))
                         {
                             activityText = activityText + " " + (actions.Count > 1 ? string.Join(", ", actions.Take(actions.Count - 1)) + " or " + actions.Last() : actions.FirstOrDefault());
                         }
 
                         _hubConnector.GetText2Speech(_userName, activityText);
-                        this.UIAction.Invoke(activity.Text, activity.Action, string.Empty);
+                    }
+                    if (activity.Text == "All items in the warehouse have been picked. Thank you.")
+                    {
+                        this.UIAction.Invoke(activity.Text, new List<CardAction>());
                     }
                 }
 

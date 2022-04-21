@@ -77,25 +77,20 @@
                         <Button Text="Send" HorizontalOptions="Center" VerticalOptions="Start" TextColor="#1E3D73" Margin="60,10,20,0" IsVisible="{Binding IsSendVisible}" Command="{Binding SendCommand}"/>
                     </StackLayout>-->
                 </StackLayout>
-               
-                <ListView x:Name="ItemsListToPickFrom" ItemsSource="{Binding ItemsToPick}" SeparatorVisibility="None" ItemAppearing="ConversationList1_ItemAppearing"
-                        HasUnevenRows="True" HorizontalOptions="Fill" VerticalOptions="Fill" SelectionMode="None">
+
+                <ListView x:Name="AvailableActions" ItemsSource="{Binding AvailableActions}" SeparatorVisibility="None" HasUnevenRows="True" HorizontalOptions="Fill" VerticalOptions="Fill" SelectionMode="None">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <ViewCell>
                                 <Grid Grid.Column="{Binding GridColumn}" Grid.ColumnSpan="1" Margin="0,0,2,2" >
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="150"/>
-                                        <ColumnDefinition Width="50"/>
-                                        <ColumnDefinition Width="64"/>
+                                        <ColumnDefinition Width="225"/>
                                     </Grid.ColumnDefinitions>
                                     
-                                    <Label Grid.Column="0" Margin="4" Text="{Binding Name}"/>
-                                    <Label Grid.Column="1" Margin="4" Text="{Binding ItemId}"/>
-                                    <Button Text="Pick"
-                                            Command="{Binding BindingContext.PickItemCommand, Source={x:Reference Name=DemoViewPage}}"
+                                    <Button Text="{Binding ActionText}"
+                                            Command="{Binding BindingContext.SelectActionCommand, Source={x:Reference Name=DemoViewPage}}"
                                             CommandParameter="{Binding .}"
-                                            Grid.Column="2"
+                                            Grid.Column="0"
                                             BackgroundColor="#3A4235"
                                             TextColor="#FFFFFF"
                                             Margin="4" ></Button>
@@ -105,6 +100,7 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
+
                 <Label Text="{Binding ItemPickingErrorText}" 
                     VerticalOptions="End" HorizontalOptions="Center" Margin="40,0,0,0" HorizontalTextAlignment="Center" TextColor="{Binding TextColor}" IsVisible="{Binding IsItemPickingErrorTextVisible}"/>
             </StackLayout>

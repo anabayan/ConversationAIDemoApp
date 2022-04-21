@@ -24,6 +24,7 @@ namespace AI4Good.ViewModels
         public ObservableCollection<Conversation> Conversations { get; set; }
         public ObservableCollection<UserRole> UserRoles { get; set; }
         public ObservableCollection<Item> ItemsToPick { get; set; }
+        public ObservableCollection<BotAction> AvailableActions { get; set; }
         public Item NextItemToPick { get; set; }
         public List<Item> ItemsPicked { get; set; }
         public User User { get; set; }
@@ -153,6 +154,7 @@ namespace AI4Good.ViewModels
         {
             Conversations = new ObservableCollection<Conversation>();
             UserRoles = new ObservableCollection<UserRole>();
+            AvailableActions = new ObservableCollection<BotAction>();
             //webAPIService = new WebAPIService();
 
             ItemsToPick = new ObservableCollection<Item>();
@@ -179,11 +181,20 @@ namespace AI4Good.ViewModels
             await _bot.StartBotConversation(UserName);
         }
 
-        private void _bot_UIAction(string str, string str2, string str3)
+        private void _bot_UIAction(string message, IList<Microsoft.Bot.Connector.DirectLine.CardAction> actions)
         {
-            if(str.ToUpper()== "Please select an item to pick".ToUpper())
+            //if(str.ToUpper()== "Please select an item to pick".ToUpper())
+            //{
+            //    GetItemsToPick("PICK");
+            //}
+            AvailableActions.Clear();
+            if (actions.Count < 1) return;
+            foreach (var action in actions)
             {
-                GetItemsToPick("PICK");
+                AvailableActions.Add(new BotAction
+                {
+                    ActionText = action.Value.ToString()
+                });
             }
         }
 
@@ -202,9 +213,7 @@ namespace AI4Good.ViewModels
                 MuteText = "MUTE";
                 Audio.PlayBase64(message);
 
-                if (originalMessage.Contains("Pick, Pack"))
-                    AreOptionsVisible = true;
-                else if(originalMessage=="base64speech")
+                if(originalMessage=="base64speech")
                 {
                     await HandleBotMessageAsync(message, false);
                 }
@@ -304,6 +313,8 @@ namespace AI4Good.ViewModels
         public Command SendCommand { get; set; }
         public Command OptionsCommand { get; set; }
         public Command PickItemCommand { get; set; }
+        public Command SelectActionCommand { get; set; }
+
 
         private void InitializeCommands()
         {
@@ -317,6 +328,8 @@ namespace AI4Good.ViewModels
             OptionsCommand = new Command((option) => GetItemsToPick(option));
             PickItemCommand = new Command(async (e) => await ExecutePickItemCommand(e));
             SendCommand = new Command((e) => ExecuteSendCommand());
+            SelectActionCommand = new Command(async (e) => await ExecuteSelectActionCommand(e));
+
         }
 
 
@@ -365,6 +378,14 @@ namespace AI4Good.ViewModels
             MessageInput = string.Empty;
             Conversations.Add(new Conversation { IsAI = false, Message = CurrentSpeech });
             await _bot.SendMessage(CurrentSpeech);
+        }
+
+        private async Task ExecuteSelectActionCommand(object action)
+        {
+            var _action = (BotAction)action;
+            await HandleBotMessageAsync(_action.ActionText, false);
+
+
         }
 
         // Get Items for Picking
